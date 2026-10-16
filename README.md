@@ -18,7 +18,7 @@ it, and the timestamp of the block it landed in.
 | **First seal** | [`0xcd414805…28d25b12`](https://scan.botchain.ai/tx/0xcd4148052d7a8977bad6be07f4d856746a1aa0a77764ea3004996bc128d25b12) · block 26,879,054 · 48,089 gas · **0.00096178 BOT** |
 | Sealed digest | `0xf5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1` |
 | Sealed at | 2026-10-16 09:41:50 UTC |
-| Live URL | _pending — needs a host_ |
+| Live URL | **https://seal-botchain.netlify.app** |
 | Repo | https://github.com/n4beel/seal-botchain |
 
 Total cost of getting Seal onto mainnet, deploy and first transaction together: **0.00626638 BOT**.
