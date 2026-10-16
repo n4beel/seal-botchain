@@ -9,6 +9,26 @@ manuscript or a dataset you have not published.
 **The one transaction:** `seal(bytes32 digest, string label)` — records the digest, who submitted
 it, and the timestamp of the block it landed in.
 
+### BOT Chain mainnet (677) — live
+
+| | |
+|---|---|
+| Contract | [`0x1541EA25d30Ba97e643a254E8740d5802Bbf6ce9`](https://scan.botchain.ai/address/0x1541EA25d30Ba97e643a254E8740d5802Bbf6ce9) · source verified |
+| Deploy tx | [`0x177fcd65…00186e81`](https://scan.botchain.ai/tx/0x177fcd65e8209dcc368130ab5ead91ead8559c72b50294b7fe29598700186e81) · block 26,878,980 · 265,230 gas |
+| **First seal** | [`0xcd414805…28d25b12`](https://scan.botchain.ai/tx/0xcd4148052d7a8977bad6be07f4d856746a1aa0a77764ea3004996bc128d25b12) · block 26,879,054 · 48,089 gas · **0.00096178 BOT** |
+| Sealed digest | `0xf5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1` |
+| Sealed at | 2026-10-16 09:41:50 UTC |
+| Live URL | _pending — needs a host_ |
+
+Total cost of getting Seal onto mainnet, deploy and first transaction together: **0.00626638 BOT**.
+
+The contract has the same address on both networks. That is not a trick — it is the same deployer
+at the same nonce, so `CREATE` derives the same address. They are entirely separate contracts with
+separate storage, which is easy to confirm: the mainnet one reports `isSealed` false for a digest
+the Bohr one reports true.
+
+---
+
 ### Bohr testnet (968) — live
 
 | | |
@@ -19,25 +39,13 @@ it, and the timestamp of the block it landed in.
 | Sealed digest | `0xf5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1` |
 | Sealed at | 2026-10-16 09:01:23 UTC |
 
-The first seal is this contract's own source, so the digest is reproducible from this repo:
+On both networks the first seal is this contract's own source, so the digest is reproducible from
+this repo:
 
 ```bash
 sha256sum contracts/src/SealRegistry.sol
 # f5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1
 ```
-
-### BOT Chain mainnet (677) — not yet deployed
-
-| | |
-|---|---|
-| Contract | _pending_ |
-| First transaction | _pending_ |
-| Live URL | _pending_ |
-
-Mainnet is the only network the listing bar accepts. Deploy costs ~0.0069 BOT and the first seal
-~0.00096 BOT, both measured on Bohr at 20 gwei.
-
----
 
 ## What it proves, and what it does not
 
