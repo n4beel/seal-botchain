@@ -9,9 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run lib",
     "test:watch": "vitest",
-    "chain:check": "node scripts/check-chain.mjs"
+    "chain:check": "node scripts/check-chain.mjs",
+    "test:integration": "vitest run test/integration"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.2.1",

@@ -7,6 +7,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "test/**/*.test.ts"],
+    // anvil needs a moment to boot before the first test can deploy.
+    testTimeout: 30_000,
   },
 });
