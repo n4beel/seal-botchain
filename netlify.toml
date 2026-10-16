@@ -12,6 +12,18 @@
   command = "npm run build"
   publish = ".next"
 
+# Declared rather than left to auto-detection.
+#
+# Netlify auto-installs this runtime for Git-linked projects, but an API/zip deploy detected the
+# framework as "next" and still ran no plugins: the build published .next as a folder of static
+# files, so every route 404'd and not one function was created. Declaring the package makes the
+# runtime run on any deploy path.
+#
+# No version. Netlify ships a new runtime with each build image, and pinning it here is how a
+# project ends up on a runtime older than its Next version.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [build.environment]
   # Pinned because the build image's default moves, and a Node bump is not something to discover
   # from a red build on the day of a listing submission. Next 16 needs 20.9+.
