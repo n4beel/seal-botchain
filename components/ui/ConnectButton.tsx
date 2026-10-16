@@ -6,9 +6,34 @@ import { formatUnits } from "viem";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import Button from "./Button";
 import { activeBotChain, isBotChainId } from "@/lib/botchain/chain";
+import { useToast } from "./Toast";
+import { hasInjectedWallet, WALLET_INSTALL_URL } from "@/lib/wallet";
 
 function truncate(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+/**
+ * A wallet error in words a user can act on.
+ *
+ * Wallet errors arrive in several shapes — a viem `BaseError` with a `shortMessage`, a plain
+ * `Error`, or an EIP-1193 object carrying only a numeric `code`. Rejection is by far the most
+ * common and is not a failure worth alarming language.
+ */
+function describe(err: unknown): string {
+  const code = typeof err === "object" && err !== null && "code" in err ? (err as { code: unknown }).code : undefined;
+  if (code === 4001) return "You dismissed the request in your wallet.";
+  if (code === 4902) return `${activeBotChain.name} is not in your wallet, and it declined to add it.`;
+
+  const message =
+    typeof err === "object" && err !== null && "shortMessage" in err
+      ? String((err as { shortMessage: unknown }).shortMessage)
+      : err instanceof Error
+        ? err.message
+        : String(err);
+
+  if (/rejected|denied|cancell?ed/i.test(message)) return "You dismissed the request in your wallet.";
+  return message;
 }
 
 const menuContentStyle = {
@@ -28,6 +53,7 @@ const menuItemClass =
  */
 export default function ConnectButton() {
   const { address, isConnected, chainId, connector } = useAccount();
+  const { toast } = useToast();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
@@ -40,8 +66,41 @@ export default function ConnectButton() {
   useEffect(() => setMounted(true), []);
 
   const handleSwitch = useCallback(() => {
-    switchChain({ chainId: activeBotChain.id });
-  }, [switchChain]);
+    switchChain(
+      { chainId: activeBotChain.id },
+      {
+        onError: (err) =>
+          toast("error", `Could not switch to ${activeBotChain.name}`, describe(err)),
+      },
+    );
+  }, [switchChain, toast]);
+
+  /**
+   * Connect, and say so when it fails.
+   *
+   * Two deliberate choices here, both from a wallet that did nothing when clicked:
+   *
+   * `chainId` is not passed. Asking wagmi to connect *and* land on a specific chain makes it add
+   * an unknown network as part of connecting, and a wallet that will not do that — Firefox's
+   * MetaMask among them — fails the whole connect rather than connecting on the chain it is
+   * already on. Connecting first and switching second gives each step its own prompt and its own
+   * visible error, and `BotChainGate` already renders the switch.
+   *
+   * The error is surfaced. `useConnect` is a mutation, so a rejected connect settles into mutation
+   * state and never reaches the console — which is precisely how this presented: a button that
+   * looked dead, in one browser, with nothing logged anywhere.
+   */
+  const handleConnect = useCallback(
+    (connector: (typeof connectors)[number]) => {
+      connect(
+        { connector },
+        {
+          onError: (err) => toast("error", "Could not connect", describe(err)),
+        },
+      );
+    },
+    [connect, toast],
+  );
 
   if (!mounted) {
     return (
@@ -175,6 +234,30 @@ export default function ConnectButton() {
     );
   }
 
+  // No wallet at all. Checked before the connect branches, because a Connect button is the wrong
+  // answer here: clicking it rejects with ConnectorNotFoundError, wagmi settles that into mutation
+  // state, and the user sees a dead button with nothing in the console. This is what a second
+  // browser without the extension actually looks like.
+  if (!hasInjectedWallet(connectors.map((c) => c.id))) {
+    return (
+      <a
+        href={WALLET_INSTALL_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="w-full inline-flex items-center justify-center gap-2 px-3 py-1.5 text-[11px] font-medium tracking-[0.02em] uppercase no-underline"
+        style={{
+          borderRadius: "2px",
+          border: "1px solid var(--warning)",
+          color: "var(--warning)",
+          background: "transparent",
+        }}
+        title="No wallet extension found in this browser"
+      >
+        Install a wallet
+      </a>
+    );
+  }
+
   // Not connected. EIP-6963 discovery means each installed wallet appears as its own connector, so
   // there is no need to hand-maintain a wallet list.
   if (connectors.length === 1) {
@@ -182,7 +265,7 @@ export default function ConnectButton() {
       <Button
         size="sm"
         className="w-full"
-        onClick={() => connect({ connector: connectors[0], chainId: activeBotChain.id })}
+        onClick={() => handleConnect(connectors[0])}
       >
         Connect Wallet
       </Button>
@@ -207,7 +290,7 @@ export default function ConnectButton() {
               key={connector.uid}
               className={menuItemClass}
               style={{ color: "var(--text-secondary)" }}
-              onClick={() => connect({ connector, chainId: activeBotChain.id })}
+              onClick={() => handleConnect(connector)}
             >
               {connector.icon && (
                 // eslint-disable-next-line @next/next/no-img-element
