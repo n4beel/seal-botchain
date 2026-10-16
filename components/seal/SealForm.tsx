@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BaseError, ContractFunctionRevertedError, type Hex } from "viem";
 import {
   useAccount,
@@ -77,20 +77,41 @@ export default function SealForm({
     query: { enabled: Boolean(hash) },
   });
 
-  useEffect(() => {
-    if (!receipt.isSuccess) return;
-    setStage("confirmed");
-    toast("success", "Sealed", "The digest is now timestamped on chain.");
-    // The record the page shows afterwards comes from the chain, not from local state, so a
-    // reload or a shared link shows exactly what a third party would see.
-    void existing.refetch();
-  }, [receipt.isSuccess, toast, existing]);
+  /**
+   * One settlement per transaction, keyed by its hash.
+   *
+   * This replaces two effects that keyed off `receipt.isSuccess` / `receipt.isError` alone. The
+   * success one also listed the whole `useReadContract` result in its dependencies, and that
+   * object is a fresh identity on every render — so once a receipt arrived the effect ran on
+   * *every* render, each run firing a toast, each toast setting state in the provider, each render
+   * handing the effect a new object. React stopped it with "Maximum update depth exceeded", and
+   * the stack blamed `ToastProvider` in the root layout rather than this file.
+   *
+   * A ref holding the hash already settled is what makes this fire once. It is a ref rather than
+   * state because changing it must not itself cause a render — that is the loop this is escaping.
+   */
+  const settledHash = useRef<Hex | null>(null);
+  // Pulled out so the effect depends on the function, not on the query object that wraps it.
+  // react-query keeps `refetch` stable across renders; the result object around it is not.
+  const refetchExisting = existing.refetch;
 
   useEffect(() => {
-    if (!receipt.isError) return;
-    setStage("failed");
-    toast("error", "Transaction failed", "Nothing was recorded. Check the explorer and try again.");
-  }, [receipt.isError, toast]);
+    if (!hash || settledHash.current === hash) return;
+    if (!receipt.isSuccess && !receipt.isError) return;
+
+    settledHash.current = hash;
+
+    if (receipt.isSuccess) {
+      setStage("confirmed");
+      toast("success", "Sealed", "The digest is now timestamped on chain.");
+      // The record shown afterwards comes from the chain, not from local state, so a reload or a
+      // shared link shows exactly what a third party would see.
+      void refetchExisting();
+    } else {
+      setStage("failed");
+      toast("error", "Transaction failed", "Nothing was recorded. Check the explorer and try again.");
+    }
+  }, [hash, receipt.isSuccess, receipt.isError, toast, refetchExisting]);
 
   const labelBytes = labelByteLength(label);
   const labelTooLong = labelBytes > MAX_LABEL_BYTES;
@@ -100,6 +121,7 @@ export default function SealForm({
 
     setStage("signing");
     setHash(null);
+    settledHash.current = null;
     try {
       const txHash = await writeContractAsync({
         address: deployment.address,
@@ -158,6 +180,31 @@ export default function SealForm({
     );
   }
 
+  // Checked before `alreadySealed`, and the order matters. Confirming a seal refetches the record,
+  // which immediately makes `alreadySealed` true — so with the other branch first, the moment a
+  // seal succeeded the screen replaced it with "you already sealed this, nothing to pay for
+  // twice". That reads as a rejection of the thing that just worked, and it threw away the
+  // transaction hash, which is the one artifact worth keeping.
+  if (stage === "confirmed") {
+    return (
+      <div className="flex flex-col gap-3">
+        {alreadySealed && <RecordCard record={alreadySealed} chainId={chainId} />}
+        <Panel>
+          <div className="flex flex-col gap-3">
+            <TxStatus stage="confirmed" hash={hash} confirmedLabel="Sealed on chain" />
+            <a
+              href={`/record/${digest}`}
+              className="text-[11px] uppercase tracking-[0.04em] underline"
+              style={{ color: "var(--accent)" }}
+            >
+              Open the shareable certificate
+            </a>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
   if (alreadySealed) {
     const mine = address && alreadySealed.sealer.toLowerCase() === address.toLowerCase();
     return (
@@ -171,8 +218,6 @@ export default function SealForm({
       </div>
     );
   }
-
-  const confirmed = stage === "confirmed";
 
   return (
     <Panel>
@@ -198,7 +243,7 @@ export default function SealForm({
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="contract.pdf"
-          disabled={stage === "signing" || stage === "pending" || confirmed}
+          disabled={stage === "signing" || stage === "pending"}
           error={labelTooLong ? `${labelBytes} of ${MAX_LABEL_BYTES} bytes` : undefined}
           hint={
             labelTooLong
@@ -216,19 +261,8 @@ export default function SealForm({
         <TxStatus
           stage={stage}
           hash={hash}
-          confirmedLabel="Sealed on chain"
           failedLabel="Transaction failed — nothing was sealed."
         />
-
-        {confirmed && (
-          <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-            Reload to see the record as a third party would, or open the{" "}
-            <a href={`/record/${digest}`} className="underline" style={{ color: "var(--accent)" }}>
-              shareable certificate
-            </a>
-            .
-          </p>
-        )}
       </div>
     </Panel>
   );
