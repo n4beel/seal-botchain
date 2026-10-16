@@ -48,6 +48,20 @@ export const activeBotChain =
   process.env.NEXT_PUBLIC_BOTCHAIN_NETWORK === "mainnet" ? botChain : bohrTestnet;
 
 export const BOT_CHAINS = [botChain, bohrTestnet] as const;
+/**
+ * The chains in the order wagmi should be handed them, the build's target first.
+ *
+ * This ordering is load-bearing, not cosmetic. With no wallet connected, wagmi's `useChainId`
+ * reports `chains[0]`, and every read and every network label in the app keys off that. Listing
+ * mainnet first meant a testnet build told an unconnected visitor "Mainnet" and pointed its
+ * contract reads at 677 — on a page that was displaying a Bohr record. Active first makes the
+ * unconnected default agree with what the build actually targets.
+ */
+export const WAGMI_CHAINS =
+  activeBotChain.id === botChain.id
+    ? ([botChain, bohrTestnet] as const)
+    : ([bohrTestnet, botChain] as const);
+
 
 export type BotChainId = (typeof BOT_CHAINS)[number]["id"];
 

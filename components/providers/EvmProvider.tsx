@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { WagmiProvider, createConfig, http, cookieStorage, createStorage } from "wagmi";
 import { injected, walletConnect } from "wagmi/connectors";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { botChain, bohrTestnet } from "@/lib/botchain/chain";
+import { botChain, bohrTestnet, WAGMI_CHAINS } from "@/lib/botchain/chain";
 import { app } from "@/lib/app-config";
 
 const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
@@ -43,7 +43,7 @@ function buildConfig() {
   ];
 
   return createConfig({
-    chains: [botChain, bohrTestnet],
+    chains: WAGMI_CHAINS,
     connectors,
     // EIP-6963 discovery, so multiple installed wallets are listed separately instead of fighting
     // over window.ethereum.
