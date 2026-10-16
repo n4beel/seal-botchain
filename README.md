@@ -64,6 +64,23 @@ Then read the record straight off the chain:
 cast call <contract> "recordOf(bytes32)((address,uint64))" 0x<digest> --rpc-url https://rpc.botchain.ai
 ```
 
+## Seal requires HTTPS
+
+`crypto.subtle` — the only way to hash a file in a browser without shipping a hash implementation
+— is exposed **only in a secure context**. That means `https://`, `localhost` or `127.0.0.1`, and
+nothing else. Served over plain HTTP from a LAN IP, `crypto.subtle` is simply `undefined` and
+hashing cannot happen at all.
+
+Consequences worth knowing before testing:
+
+- `http://localhost:3000` works. Desktop MetaMask testing is unaffected.
+- `http://192.168.x.x:3000` **does not** — so a phone on the same wifi cannot test the hashing
+  flow against a local dev server. Use a real HTTPS deployment, or an HTTPS tunnel, for mobile.
+- Any production host must be HTTPS. Vercel and Netlify are by default.
+
+`digestFile` detects this and says so rather than failing as an unexplained error, but it cannot
+work around it.
+
 ## Screens
 
 | Route | What it does | Wallet |
