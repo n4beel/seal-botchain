@@ -9,12 +9,33 @@ manuscript or a dataset you have not published.
 **The one transaction:** `seal(bytes32 digest, string label)` — records the digest, who submitted
 it, and the timestamp of the block it landed in.
 
+### Bohr testnet (968) — live
+
 | | |
 |---|---|
-| Network | BOT Chain mainnet (677) |
-| Contract | _not yet deployed_ |
+| Contract | [`0x1541EA25d30Ba97e643a254E8740d5802Bbf6ce9`](https://scan.bohr.life/address/0x1541EA25d30Ba97e643a254E8740d5802Bbf6ce9) · source verified |
+| Deploy tx | [`0x4304ecac…5ac2d5f4`](https://scan.bohr.life/tx/0x4304ecac6687359c2fe7eaf488386ea5cd7742560992c3b0e68780605ac2d5f4) · block 27,042,362 · 265,230 gas |
+| First seal | [`0xa1a0dd27…4330cca2`](https://scan.bohr.life/tx/0xa1a0dd276e9655fa3cb8b200993cdcf5b6ce9ce374d8a7ab69bdb7534330cca2) · block 27,042,400 · **48,089 gas** |
+| Sealed digest | `0xf5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1` |
+| Sealed at | 2026-10-16 09:01:23 UTC |
+
+The first seal is this contract's own source, so the digest is reproducible from this repo:
+
+```bash
+sha256sum contracts/src/SealRegistry.sol
+# f5b1937f9a608175329ad25ff35b6cbf0833cd500007f096daddf60609423ce1
+```
+
+### BOT Chain mainnet (677) — not yet deployed
+
+| | |
+|---|---|
+| Contract | _pending_ |
 | First transaction | _pending_ |
-| Live | _pending_ |
+| Live URL | _pending_ |
+
+Mainnet is the only network the listing bar accepts. Deploy costs ~0.0069 BOT and the first seal
+~0.00096 BOT, both measured on Bohr at 20 gwei.
 
 ---
 
@@ -69,8 +90,9 @@ extension, and JavaScript off.
 - **Zero digests are refused.** Zero is also the mapping's empty value, so sealing it would let
   one caller occupy the slot every unsealed lookup collides with.
 
-Measured cost: **31,068 gas** for `seal()` in the Solidity harness, **~52,000** for a real
-transaction including the 21,000 base cost. At 20 gwei that is about **0.001 BOT** per seal.
+Measured cost: **31,068 gas** for `seal()` in the Solidity harness; **48,089 gas** for the real
+transaction on Bohr, including the 21,000 base cost. At 20 gwei that is **0.00096 BOT** per seal.
+The local anvil measurement was 48,017 — within 0.2% of the live chain.
 
 ## Development
 
@@ -93,16 +115,20 @@ wrong signature surfaces in the browser as an unexplained revert.
 
 ## Deploying
 
-```bash
-# Bohr testnet
-cd contracts
-forge script script/Deploy.s.sol --rpc-url bohr --broadcast
+Put `DEPLOYER_PRIVATE_KEY` in `.env` (gitignored, `0x` prefix optional), then:
 
-# Mainnet, once the testnet flow is verified end to end
-DEPLOYER_PRIVATE_KEY=0x... forge script script/Deploy.s.sol --rpc-url botchain --broadcast
+```bash
+cd contracts
+./deploy.sh bohr --dry     # simulate, broadcast nothing
+./deploy.sh bohr           # testnet
+./deploy.sh botchain       # mainnet — real BOT, no faucet
 ```
 
-The script prints the two `.env.local` lines the frontend needs. Both are required — an address
+The wrapper asks the node what chain it is on and refuses to broadcast if it disagrees with the
+network named, which is the one mistake here that cannot be undone. It then verifies the source on
+the explorer — both run Blockscout.
+
+The script prints the two `.env.local` lines the frontend needs. Both are required: an address
 without a deploy block is treated as unconfigured, because a contract whose start block is unknown
 cannot be read back over logs.
 
