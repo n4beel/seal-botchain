@@ -18,7 +18,7 @@ export default function SealScreen() {
   return (
     <div className="flex flex-col gap-4">
       <FileDrop onHashed={setFile} />
-      <BotChainGate>
+      <BotChainGate noWalletNote="Hashing a file still works here — it happens in the browser and needs no wallet — but sealing one needs a wallet to sign the transaction.">
         <SealForm digest={file?.digest ?? null} suggestedLabel={file?.name} />
       </BotChainGate>
     </div>
