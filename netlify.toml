@@ -1,0 +1,30 @@
+# Netlify build configuration.
+#
+# The Next.js runtime (@netlify/plugin-nextjs) is installed and updated by Netlify automatically.
+# It is deliberately NOT pinned here or in package.json: Netlify ships a new runtime with each
+# build image, and pinning it is how a project ends up on a runtime older than its Next version.
+#
+# Note there is no `/* -> /index.html 200` catch-all anywhere in this project, and there must not
+# be one. A user redirect beats the adapter's own routes, so a leftover SPA catch-all silently
+# serves static HTML for /record/<digest> — which is the one route here that must reach the server.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Pinned because the build image's default moves, and a Node bump is not something to discover
+  # from a red build on the day of a listing submission. Next 16 needs 20.9+.
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # The app hashes files in the browser via crypto.subtle, which exists only in a secure
+    # context. HSTS keeps a recipient who types http:// from landing on a version where hashing
+    # is silently unavailable.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # No file ever leaves the browser, and nothing here is embeddable.
+    X-Frame-Options = "DENY"
