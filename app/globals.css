@@ -5,147 +5,95 @@
 @source "../lib/**/*.{ts,tsx}";
 
 @theme {
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-
-  --radius: 2px;
-  --radius-sm: 2px;
-  --radius-md: 4px;
+  --font-sans: var(--font-body), Georgia, serif;
+  --font-mono: var(--font-mono-ui), ui-monospace, monospace;
+  --radius: 0px;
 }
 
 /**
- * Design tokens.
- *
- * Every component reads these through `var(--token)` rather than a Tailwind colour class, which is
- * what lets a project change its whole palette from `lib/app-config.ts`: the root layout writes
- * `--accent` inline, overriding the default below. Nothing else needs editing per project.
+ * Seal is a document, and it is the only one of these apps whose output is meant to be printed,
+ * filed or sent to a lawyer. So it is set like one: a warm paper ground, a serif text face, a
+ * single narrow measure, and rules instead of boxes. Nothing here is a card.
  */
 :root {
-  --bg-base: #0A0A0A;
-  --bg-surface: #111111;
-  --bg-elevated: #181818;
-  --bg-overlay: #1F1F1F;
-  --border-subtle: #1E1E1E;
-  --border-default: #2A2A2A;
-  --border-strong: #383838;
-  --text-primary: #EBEBEB;
-  --text-secondary: #888888;
-  --text-tertiary: #555555;
-  --accent: #00E5CC;
-  --success: #1DB954;
-  --warning: #F5A623;
-  --danger: #E53E3E;
+  --paper: #FBFAF7;
+  --paper-sunk: #F3F1EB;
+  --ink: #15130F;
+  --ink-soft: #55504A;
+  --ink-faint: #8A847B;
+  --rule: #DCD7CC;
+  --rule-strong: #B9B2A4;
+
+  /* Mapped onto the names the shared components already use, so the gate, toasts and
+     transaction status keep working without being rewritten per project. */
+  --bg-base: var(--paper);
+  --bg-surface: var(--paper);
+  --bg-elevated: var(--paper-sunk);
+  --bg-overlay: #FFFFFF;
+  --border-subtle: var(--rule);
+  --border-default: var(--rule);
+  --border-strong: var(--rule-strong);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-tertiary: var(--ink-faint);
+  --accent: #8A5A2B;
+  --success: #2F6B3A;
+  --warning: #8A6A12;
+  --danger: #9B2C2C;
 }
 
 @layer base {
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    height: 100%;
-  }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; }
   body {
-    background: var(--bg-base);
-    color: var(--text-primary);
+    background: var(--paper);
+    color: var(--ink);
     font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.65;
     min-height: 100%;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-
-  a {
-    color: inherit;
-  }
+  a { color: inherit; }
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
 }
 
-/* Touch targets
- *
- * The interface is deliberately dense, and at 26px tall a `size="sm"` button is comfortable with a
- * mouse and a coin-flip with a thumb. `pointer: coarse` matches touch input rather than screen
- * width, so this raises the hit area exactly where it is needed and leaves mouse density
- * untouched, including on a small laptop window.
- *
- * 44px is Apple's minimum; Android asks for 48dp. Padding rather than height, so a control that is
- * already large enough is not stretched.
- */
+/* Inputs read as ruled lines on a form, not as boxes. */
+input[type="text"], input[type="number"], textarea {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule-strong) !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+input:focus, textarea:focus { border-bottom-color: var(--accent) !important; outline: none; }
+
 @media (pointer: coarse) {
-  button,
-  [role="button"],
-  a.nav-link,
-  select,
-  label[for] {
-    min-height: 44px;
-  }
-
-  input,
-  textarea {
-    /* Anything under 16px makes iOS Safari zoom the page on focus, and it does not zoom back. */
-    font-size: 16px;
-  }
+  button, [role="button"], a.nav-link, select, label[for] { min-height: 44px; }
+  input, textarea { font-size: 16px; }
 }
 
-/* Nothing should be able to scroll the page sideways. A single overflowing address or hash
- * otherwise shifts the whole layout and there is no obvious culprit. */
-html,
-body {
-  overflow-x: hidden;
+html, body { overflow-x: hidden; }
+::selection { background: #E8DFCC; color: var(--ink); }
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--paper-sunk); }
+::-webkit-scrollbar-thumb { background: var(--rule-strong); }
+
+.mono { font-family: var(--font-mono); letter-spacing: -0.01em; }
+
+/* A printed certificate should not carry the app chrome. */
+@media print {
+  header, footer, nav, button { display: none !important; }
+  body { background: #FFFFFF; font-size: 12pt; }
 }
 
-::selection {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  color: var(--accent);
-}
-
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-base);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 2px;
-}
-
-.mono {
-  font-family: var(--font-mono);
-  letter-spacing: 0;
-}
-
-/* Toast entry. Radix drives the data-state; without the keyframes the toast simply appears. */
-@keyframes slideIn {
-  from { transform: translateX(8px); opacity: 0; }
-  to   { transform: translateX(0);   opacity: 1; }
-}
-@keyframes swipeOut {
-  to { transform: translateX(100%); opacity: 0; }
-}
-
-@keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--bg-surface) 25%,
-    var(--bg-elevated) 50%,
-    var(--bg-surface) 75%
-  );
-  background-size: 800px 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
-  border-radius: 2px;
-}
+@keyframes slideIn { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes swipeOut { to { transform: translateX(100%); opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
