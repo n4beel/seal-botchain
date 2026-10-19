@@ -16,3 +16,6 @@ contracts/broadcast/
 .DS_Store
 *.log
 .netlify/
+
+# Netlify CLI/deploy state
+.netlify

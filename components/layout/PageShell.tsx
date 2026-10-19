@@ -33,7 +33,32 @@ export default function PageShell({ children, nav = [], title, description }: Pa
           className="flex items-baseline justify-between gap-4 flex-wrap py-5"
           style={{ borderBottom: "2px solid var(--ink)" }}
         >
-          <Link href="/" className="no-underline">
+          <Link href="/" className="flex items-baseline gap-2.5 no-underline">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 100 100"
+              style={{ width: "21px", height: "21px", fill: "var(--accent)", alignSelf: "center" }}
+            >
+              <circle cx="83" cy="50" r="10" />
+              <circle cx="78.6" cy="66.5" r="10" />
+              <circle cx="66.5" cy="78.6" r="10" />
+              <circle cx="50" cy="83" r="10" />
+              <circle cx="33.5" cy="78.6" r="10" />
+              <circle cx="21.4" cy="66.5" r="10" />
+              <circle cx="17" cy="50" r="10" />
+              <circle cx="21.4" cy="33.5" r="10" />
+              <circle cx="33.5" cy="21.4" r="10" />
+              <circle cx="50" cy="17" r="10" />
+              <circle cx="66.5" cy="21.4" r="10" />
+              <circle cx="78.6" cy="33.5" r="10" />
+              <circle cx="50" cy="50" r="34" />
+              <path
+                d="M38 36 h24 M38 50 h24 M38 64 h16"
+                stroke="var(--paper)"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            </svg>
             <span
               className="text-[22px] font-semibold tracking-[-0.02em]"
               style={{ color: "var(--ink)" }}
