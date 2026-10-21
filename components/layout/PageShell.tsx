@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ConnectButton from "@/components/ui/ConnectButton";
 import NetworkBadge from "@/components/botchain/NetworkBadge";
+import BuiltOnBotChain from "@/components/botchain/BuiltOnBotChain";
 import { app } from "@/lib/app-config";
 
 export type NavItem = { href: string; label: string };
@@ -125,7 +126,7 @@ export default function PageShell({ children, nav = [], title, description }: Pa
             {app.tagline}
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-            <span style={{ color: "var(--ink-soft)" }}>Built on BOT Chain</span>
+            <BuiltOnBotChain style={{ color: "var(--ink-soft)" }} />
             <a href="https://botchain.ai" target="_blank" rel="noreferrer" style={{ color: "var(--ink-faint)" }}>
               botchain.ai
             </a>
