@@ -17,7 +17,7 @@ export const app = {
    * Accent colour. Written into `--accent` at the document root, so every component that reads
    * `var(--accent)` picks it up without edits.
    */
-  accent: "#D4A857",
+  accent: "#8A5A2B",
   /**
    * The single transaction this app exists to make, in the user's words. Shown in the empty state
    * and reused verbatim in the listing submission, so the app and the form cannot disagree.
